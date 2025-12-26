@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Araç Takip Sistemi</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            background: #eef2f3; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 350px; 
+        }
+        h2 { color: #333; margin-bottom: 10px; }
+        #count { 
+            font-size: 100px; 
+            color: #2ecc71; 
+            font-weight: bold; 
+            margin: 10px 0; 
+            line-height: 1;
+        }
+        .log { 
+            color: #666; 
+            font-size: 16px; 
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .status { 
+            margin-top: 20px; 
+            font-size: 13px; 
+            color: #999; 
+            font-weight: 600;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: white;
+            background-color: #3498db;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <span class="badge">CANLI YAYIN</span>
+        <h2>Toplam Araç</h2>
+        
+        <div id="count">--</div>
+        
+        <div id="last-log" class="log">Veri bekleniyor...</div>
+        
+        <p id="status" class="status">Sunucu aranıyor...</p>
+    </div>
+
+    <script>
+        // WebSocket Bağlantısı
+        var ws = new WebSocket("ws://127.0.0.1:8000/ws");
+
+        // 1. Bağlantı Açıldığında
+        ws.onopen = function() {
+            var stat = document.getElementById("status");
+            stat.innerText = "🟢 SİSTEME BAĞLANDI";
+            stat.style.color = "#27ae60";
+        };
+
+        // 2. Mesaj Geldiğinde (BEYİN KISMI)
+        ws.onmessage = function(event) {
+            // Gelen veriyi JSON'a çeviriyoruz (Çünkü Python JSON yolluyor)
+            var data = JSON.parse(event.data);
+            
+            // --- SENARYO A: YENİ ARAÇ GELDİ ---
+            if (data.type === "new_detection") {
+                // Sayıyı güncelle
+                updateCount(data.count);
+                // Bilgi ver
+                document.getElementById("last-log").innerHTML = 
+                    "📸 Son Tespit: <b>" + data.vehicle_type + "</b><br>" + 
+                    "<span style='font-size:12px'>Plaka: " + (data.plate || "Okunamadı") + "</span>";
+                
+                flashScreen("#e8f5e9"); // Yeşil yanıp sön
+            }
+            
+            // --- SENARYO B: BİR ARAÇ SİLİNDİ (Senin Eklediğin Özellik) ---
+            else if (data.type === "deletion") {
+                // Sayıyı güncelle
+                updateCount(data.count);
+                // Bilgi ver
+                document.getElementById("last-log").innerHTML = 
+                    "🗑️ Bir araç kaydı silindi.<br>" + 
+                    "<span style='font-size:12px'>ID: " + data.deleted_id + "</span>";
+                
+                flashScreen("#ffebee"); // Kırmızı yanıp sön
+            }
+        };
+
+        // 3. Bağlantı Koparsa
+        ws.onclose = function() {
+            var stat = document.getElementById("status");
+            stat.innerText = "🔴 BAĞLANTI KOPTU";
+            stat.style.color = "#c0392b";
+        };
+
+        // Yardımcı Fonksiyon: Sayıyı Animasyonlu Göster
+        function updateCount(newCount) {
+            document.getElementById("count").innerText = newCount;
+        }
+
+        // Yardımcı Fonksiyon: Ekranı Renklendir
+        function flashScreen(color) {
+            document.body.style.backgroundColor = color;
+            setTimeout(function() {
+                document.body.style.backgroundColor = "#eef2f3";
+            }, 300);
+        }
+    </script>
+</body>
+</html>
