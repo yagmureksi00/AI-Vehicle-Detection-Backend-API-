@@ -7,18 +7,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get Database URL
-# Get Database URL
 SQLALCHEMY_DATABASE_URL = os.getenv("DB_URL")
 
-
-if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
 if not SQLALCHEMY_DATABASE_URL:
-    raise ValueError("DB_URL not found! Please check your .env file.")
+
+    print("⚠️ UYARI: DB_URL bulunamadı. Veritabanı bağlantısı yapılamayabilir.")
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db" 
+
+if SQLALCHEMY_DATABASE_URL.startswith("mysql://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
 
 # Create the database engine
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+try:
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_recycle=3600)
+except Exception as e:
+    print(f"❌ Motor Oluşturma Hatası: {e}")
+    raise e
 
 # Create a configured "Session" class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -26,18 +31,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Create a Base class for models
 Base = declarative_base()
 
-# Optional: Connection Test (Can be removed in production)
+# Connection Test
 try:
     with engine.connect() as connection:
         print("✅ Connection Successful! Database is accessible.")
 except Exception as e:
-    print(f"❌ An error occurred: {e}")
-
-
-
-
-try:
-    with engine.connect() as connection:
-        print("✅ Connection Successful! Database is accessible.")
-except Exception as e:
-    print(f"❌ An error occurred: {e}")
+    print(f"❌ Connection Failed: {e}")
