@@ -7,7 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get Database URL
+# Get Database URL
 SQLALCHEMY_DATABASE_URL = os.getenv("DB_URL")
+
+
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 if not SQLALCHEMY_DATABASE_URL:
     raise ValueError("DB_URL not found! Please check your .env file.")
