@@ -1,8 +1,3 @@
-Harika! Mevcut README dosyan zaten oldukça profesyonel bir dile sahip. Ancak hocana sunacağın için en önemli eksik **"Canlı Sistem Bağlantıları"** (Deployment) kısmıydı.
-
-Senin için mevcut metni koruyarak, **Render ve Aiven bağlantılarını içeren**, hocanın tıkladığında doğrudan dokümantasyonu görebileceği "Deployment" başlığını ekleyerek güncelledim.
-
-Bunu kopyalayıp doğrudan `README.md` dosyana yapıştırabilirsin:
 
 ---
 
